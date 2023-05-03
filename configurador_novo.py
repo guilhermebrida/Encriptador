@@ -12,24 +12,38 @@ from pprint import pprint
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
+import customtkinter
 
-root = Tk()
+customtkinter.set_appearance_mode("Dark")
+
+root = customtkinter.CTk()
 root.geometry("750x60")
 root.title("Encriptador")
-root.configure(background="#dde")
+
 
 class VariosArquivos():
     def __init__(self):
-        Label(root, text= "Arquivo: ", background="#dde", foreground="#009", anchor=W).place(x=10,y=10, width=100,height=20)
-        Button(root, text="Encriptar", command=self.arquivos).place(x=550,y=10,width=80,height=20)
-        Button(root, text="Decriptar",command=self.arquivos2).place(x=650,y=10,width=80,height=20)        
+        self.selected_file_label = customtkinter.CTkLabel(root, text="", anchor=W)
+        self.selected_file_label.place(x=170, y=10, width=400, height=20)
+        customtkinter.CTkButton(root, text="Selecionar arquivo(s)", command=self.select_files).place(x=10,y=10,width=150,height=20)
+        customtkinter.CTkButton(root, text="Encriptar", command=self.encrypt_files).place(x=550,y=10,width=80,height=20)
+        customtkinter.CTkButton(root, text="Decriptar",command=self.decrypt_files).place(x=650,y=10,width=80,height=20)
+        
+    def update_file_label(self, file_path):
+        self.selected_file_label.configure(text=file_path)
 
-
-    def arquivos(self):
+    def select_files(self):
         path = askopenfilenames()
         if path:
-            for i in path:
-                f=open(f'{i}',encoding='utf_8')
+            self.update_file_label(path[0].split('/')[-1])
+            self.selected_files = path
+        else:
+            self.update_file_label("Nenhum arquivo selecionado") 
+
+    def encrypt_files(self):
+        if hasattr(self, "selected_files"):
+            for file_path in self.selected_files:
+                f=open(f'{file_path}',encoding='utf_8')
                 json_data=f.read()
                 json_dict = json.loads(json_data)
                 if json_dict['hash'] == '':
@@ -38,36 +52,36 @@ class VariosArquivos():
                     encrypted_message = AES_pkcs5_obj.encrypt(comandos)
                     json_dict.update(comandos=encrypted_message)
                     json_dict.update(hash=base64.b64encode(AES_pkcs5_obj.key).decode('utf-8'))
-                    f = open(f'{i}', 'w',encoding='utf-8')
+                    f = open(f'{file_path}', 'w',encoding='utf-8')
                     json.dump(json_dict, f,ensure_ascii=False)
                 else:
                     continue
             messagebox.showinfo( "","Arquivos Encriptados")
         else:
-            messagebox.showinfo( "Escolha os Arquivos","Nenhum arquivo escolhido")
+            messagebox.showinfo( "Escolha os Arquivos","Nenhum arquivo selecionado")
 
-    def arquivos2(self):
-            path = askopenfilenames()
-            if path:
-                for i in path:
-                    f=open(f'{i}',encoding='utf_8')
-                    json_data=f.read()
-                    json_dict = json.loads(json_data)
-                    comandos=json_dict['comandos']
-                    hsh = json_dict['hash']
-                    if hsh != '':
-                        AES_pkcs5_obj = AES_pkcs5(comandos)
-                        decrypted_comandos = AES_pkcs5_obj.decrypt(hsh,comandos)
-                        json_dict.update(comandos=decrypted_comandos)
-                        json_dict.update(hash='')
-                        f = open(f'{i}', 'w',encoding='utf-8')
-                        json.dump(json_dict, f,ensure_ascii=False)
-                        f.close()
-                    else:
-                        continue
-                messagebox.showinfo("New Window", "Arquivos Decriptados")
-            else:
-                messagebox.showinfo( "Escolha os Arquivos","Nenhum arquivo escolhido")
+    def decrypt_files(self):
+        if hasattr(self, "selected_files"):
+            for file_path in self.selected_files:
+                f=open(f'{file_path}',encoding='utf_8')
+                json_data=f.read()
+                json_dict = json.loads(json_data)
+                comandos=json_dict['comandos']
+                hsh = json_dict['hash']
+                if hsh != '':
+                    AES_pkcs5_obj = AES_pkcs5(comandos)
+                    decrypted_comandos = AES_pkcs5_obj.decrypt(hsh,comandos)
+                    json_dict.update(comandos=decrypted_comandos)
+                    json_dict.update(hash='')
+                    f = open(f'{file_path}', 'w',encoding='utf-8')
+                    json.dump(json_dict, f,ensure_ascii=False)
+                    f.close()
+                else:
+                    continue
+            messagebox.showinfo("New Window", "Arquivos Decriptados")
+        else:
+            messagebox.showinfo( "Escolha os Arquivos","Nenhum arquivo selecionado")
+
             
 
 class AES_pkcs5:
@@ -115,4 +129,4 @@ class AES_pkcs5:
         
 if __name__ == '__main__':
     VariosArquivos()
-    mainloop()
+    root.mainloop()
