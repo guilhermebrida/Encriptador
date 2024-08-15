@@ -1,0 +1,11 @@
+aes-pkcs5==1.0.3
+cffi==1.17.0
+cryptography==43.0.0
+customtkinter==5.2.2
+darkdetect==0.8.0
+engineering-notation==0.10.0
+packaging==24.1
+pycparser==2.22
+pycryptodome==3.20.0
+tk==0.1.0
+tk-tools==0.16.0
